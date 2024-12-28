@@ -1,0 +1,62 @@
+//@version=5
+indicator("Daily Price Change 18:00-18:00 (Matrix Version)", overlay=true)
+
+// Устанавливаем параметры
+input_asset1_name = "US100"
+input_asset2_name = "US30"
+input_asset3_name = "US500"
+new_day_start_hour = 18  // Время начала нового дня (UTC-5)
+
+// Определяем время начала нового цикла
+var int cycle_start_time = na
+current_cycle_start = timestamp("GMT-5", year(time), month(time), dayofmonth(time), new_day_start_hour)
+
+// Получаем данные для активов
+asset1_open_price = request.security("CAPITALCOM:" + input_asset1_name, "D", close[1], barmerge.gaps_off, barmerge.lookahead_on)
+asset2_open_price = request.security("CAPITALCOM:" + input_asset2_name, "D", close[1], barmerge.gaps_off, barmerge.lookahead_on)
+asset3_open_price = request.security("CAPITALCOM:" + input_asset3_name, "D", close[1], barmerge.gaps_off, barmerge.lookahead_on)
+
+asset1_close_price = request.security("CAPITALCOM:" + input_asset1_name, "", close, barmerge.gaps_off, barmerge.lookahead_on)
+asset2_close_price = request.security("CAPITALCOM:" + input_asset2_name, "", close, barmerge.gaps_off, barmerge.lookahead_on)
+asset3_close_price = request.security("CAPITALCOM:" + input_asset3_name, "", close, barmerge.gaps_off, barmerge.lookahead_on)
+
+// Расчеты изменений для актива 1
+asset1_price_change_points = not na(asset1_open_price) ? asset1_close_price - asset1_open_price : na
+asset1_price_change_percent = not na(asset1_open_price) ? ((asset1_close_price - asset1_open_price) / asset1_open_price) * 100 : na
+
+// Расчеты изменений для актива 2
+asset2_price_change_points = not na(asset2_open_price) ? asset2_close_price - asset2_open_price : na
+asset2_price_change_percent = not na(asset2_open_price) ? ((asset2_close_price - asset2_open_price) / asset2_open_price) * 100 : na
+
+// Расчеты изменений для актива 3
+asset3_price_change_points = not na(asset3_open_price) ? asset3_close_price - asset3_open_price : na
+asset3_price_change_percent = not na(asset3_open_price) ? ((asset3_close_price - asset3_open_price) / asset3_open_price) * 100 : na
+
+// Матрица для двух активов
+var table change_table = table.new(position.bottom_right, 4, 3, bgcolor=color.new(color.black, 90), frame_color=color.white)
+
+// Заголовки таблицы
+table.cell(change_table, 0, 0, "Asset", text_color=color.black)
+table.cell(change_table, 0, 1, "Change (Points)", text_color=color.black)
+table.cell(change_table, 0, 2, "Change (%)", text_color=color.black)
+
+// Данные для актива 1
+table.cell(change_table, 1, 0, input_asset1_name, text_color=color.blue)
+table.cell(change_table, 1, 1, not na(asset1_price_change_points) ? str.tostring(asset1_price_change_points, "#.##") : "No Data", text_color=color.navy)
+table.cell(change_table, 1, 2, not na(asset1_price_change_percent) ? str.tostring(asset1_price_change_percent, "#.##") + "%" : "No Data", text_color=color.navy)
+
+// Данные для актива 2
+table.cell(change_table, 2, 0, input_asset2_name, text_color=color.blue)
+table.cell(change_table, 2, 1, not na(asset2_price_change_points) ? str.tostring(asset2_price_change_points, "#.##") : "No Data", text_color=color.navy)
+table.cell(change_table, 2, 2, not na(asset2_price_change_percent) ? str.tostring(asset2_price_change_percent, "#.##") + "%" : "No Data", text_color=color.navy)
+
+// Данные для актива 3
+table.cell(change_table, 3, 0, input_asset3_name, text_color=color.blue)
+table.cell(change_table, 3, 1, not na(asset3_price_change_points) ? str.tostring(asset3_price_change_points, "#.##") : "No Data", text_color=color.navy)
+table.cell(change_table, 3, 2, not na(asset3_price_change_percent) ? str.tostring(asset3_price_change_percent, "#.##") + "%" : "No Data", text_color=color.navy)
+
+// График для проверки
+plot(asset1_open_price, color=color.gray, title="Asset 1 Previous Close Price")
+plot(asset2_open_price, color=color.blue, title="Asset 2 Previous Close Price")
+plot(asset3_open_price, color=color.red, title="Asset 3 Previous Close Price")
+
